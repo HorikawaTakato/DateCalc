@@ -52,6 +52,7 @@ pip install -r requirements.txt
 ## 使い方
 
 ```bash
+# サーバーを起動
 python DateCalc_server.py
 ```
 
