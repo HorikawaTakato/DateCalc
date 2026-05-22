@@ -1,7 +1,7 @@
 # 日数計算機 DateCalc
 
 入力した日付と今日の差分を計算するツールです。  
-紀元前（例：紀元前100年）から西暦9999年まで対応しています。
+紀元前999年から西暦9999年まで対応しています。
 
 Webブラウザで使用できます。
 
@@ -11,9 +11,10 @@ Webブラウザで使用できます。
 
 ```
 DateCalc/
+├── DateCalc.html        # Webフロントエンド
 ├── DateCalc.py          # 計算ロジック + CLIインターフェース
 ├── DateCalc_server.py   # Flask Webサーバー（API）
-├── DateCalc.html        # Webフロントエンド
+├── DateCalc_test.py     # テスト
 └── requirements.txt     # 依存パッケージ
 ```
 
@@ -33,7 +34,7 @@ DateCalc/
 git clone https://github.com/HorikawaTakato/DateCalc.git
 cd DateCalc
 
-# 依存パッケージをインストール（Web版を使う場合）
+# 依存パッケージをインストール
 pip install -r requirements.txt
 ```
 
@@ -45,7 +46,7 @@ pip install -r requirements.txt
 python DateCalc_server.py
 ```
 
-起動後、ブラウザで `http://localhost:5000` を開きます。  
+起動後、Webブラウザで `http://localhost:5000` を開きます。  
 `Ctrl+C` でサーバーを停止できます。
 
 ---
