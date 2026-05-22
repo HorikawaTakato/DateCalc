@@ -38,7 +38,8 @@ DateCalc/
 
 ## セットアップ
 
-```bash
+```
+bash
 # リポジトリをクローン
 git clone https://github.com/HorikawaTakato/DateCalc.git
 cd DateCalc
@@ -51,7 +52,8 @@ pip install -r requirements.txt
 
 ## 使い方
 
-```bash
+```
+bash
 # サーバーを起動
 python DateCalc_server.py
 ```
