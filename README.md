@@ -30,7 +30,7 @@ DateCalc/
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/horikawatakato/datecalc.git
+git clone https://github.com/HorikawaTakato/DateCalc.git
 cd DateCalc
 
 # 依存パッケージをインストール（Web版を使う場合）
