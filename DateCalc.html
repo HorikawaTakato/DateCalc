@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>日数計算機</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #f5f4f0;
+      --border: #dedad2;
+      --accent: #9a6e2e;
+      --accent-dim: #b8904a;
+      --text: #1a1814;
+      --text-muted: #8a8680;
+      --text-dim: #5a5650;
+      --past: #c0392b;
+      --future: #2e6eb8;
+      --today-col: #27ae60;
+      --error: #a83e3e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Sans JP', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 20%, rgba(154,110,46,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 80% 80%, rgba(142,62,168,0.03) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    header {
+      margin-bottom: 2.5rem;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 300;
+      letter-spacing: 0.4em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .today-badge {
+      margin-top: 0.6rem;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 0.1em;
+    }
+
+    .input-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .input-section::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 2px; height: 100%;
+      background: var(--accent-dim);
+    }
+
+    label {
+      display: block;
+      font-size: 1rem;
+      letter-spacing: 0.3em;
+      color: var(--text-muted);
+      margin-bottom: 0.8rem;
+      text-transform: uppercase;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .date-fields {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: #eeece8;
+      border: 1px solid var(--border);
+      transition: border-color 0.2s;
+    }
+
+    .date-fields:focus-within {
+      border-color: var(--accent-dim);
+    }
+
+    .date-field-wrap {
+      display: flex;
+      align-items: center;
+    }
+
+    .date-field-wrap input[type="text"] {
+      background: transparent;
+      border: none;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 1.2rem;
+      padding: 0.9rem 0;
+      outline: none;
+      color: var(--text);
+      text-align: right;
+    }
+
+    /* widths sized to content */
+    #yearInput  { width: 4.2rem; padding-left: 0.3rem; }
+    #monthInput { width: 2.2rem; }
+    #dayInput   { width: 2.2rem; }
+
+    .date-sep {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      padding: 0 0.1rem;
+      user-select: none;
+    }
+
+    .field-unit {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      padding-right: 0.5rem;
+      user-select: none;
+    }
+
+    button {
+      background: transparent;
+      border: 1px solid var(--accent-dim);
+      color: var(--accent);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.2em;
+      padding: 0.7rem 1.2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: var(--accent);
+    }
+
+    .result-area {
+      min-height: 5rem;
+    }
+
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      animation: fadeSlide 0.3s ease;
+      position: relative;
+    }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-card.is-error  { border-left: 2px solid var(--error); }
+    .result-card.is-today  { border-left: 2px solid var(--today-col); }
+    .result-card.is-future { border-left: 2px solid var(--future); }
+    .result-card.is-past   { border-left: 2px solid var(--past); }
+
+    .result-date {
+      font-size: 1.3rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+    }
+
+    .result-diff {
+      font-size: 2rem;
+      font-weight: 300;
+      font-family: 'Noto Sans JP', sans-serif;
+      line-height: 1;
+      margin: 0.6rem 0;
+    }
+
+    .is-today  .result-diff { color: var(--today-col); }
+    .is-future .result-diff { color: var(--future); }
+    .is-past   .result-diff { color: var(--past); }
+
+    .error-msg {
+      color: var(--error);
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+
+    /* History */
+    .history { margin-top: 1.5rem; }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.6rem;
+    }
+
+    .history-label {
+      font-size: 0.8rem;
+      letter-spacing: 0.3em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .clear-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      cursor: pointer;
+      padding: 0.3rem 0.9rem;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .clear-btn:hover {
+      background: none;
+      border: 1px solid var(--text-muted);
+      color: var(--text-dim);
+    }
+
+    .history-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0.8rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    .history-item-date { color: var(--text-dim); }
+    .history-item-diff { font-weight: 400; }
+    .history-item-diff.future { color: var(--future); }
+    .history-item-diff.past   { color: var(--past); }
+    .history-item-diff.today  { color: var(--today-col); }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>日数計算機</h1>
+    <div class="today-badge" id="todayBadge"></div>
+  </header>
+
+  <div class="input-section">
+    <label>日付を入力</label>
+    <div class="input-row">
+      <div class="date-fields">
+        <div class="date-field-wrap">
+          <input type="text" id="yearInput"  inputmode="text" maxlength="4" placeholder="" autocomplete="off" spellcheck="false">
+          <span class="field-unit">年</span>
+        </div>
+        <div class="date-field-wrap">
+          <input type="text" id="monthInput" inputmode="numeric" maxlength="2" placeholder="" autocomplete="off" spellcheck="false">
+          <span class="field-unit">月</span>
+        </div>
+        <div class="date-field-wrap">
+          <input type="text" id="dayInput"   inputmode="numeric" maxlength="2" placeholder="" autocomplete="off" spellcheck="false">
+          <span class="field-unit">日</span>
+        </div>
+      </div>
+      <button id="calcBtn" style="margin-left:3rem">計算</button>
+      <button id="clearInputBtn">クリア</button>
+    </div>
+  </div>
+
+  <div class="result-area" id="resultArea"></div>
+
+  <div class="history" id="historySection" style="display:none">
+    <div class="history-header">
+      
+      <span></span><button class="clear-btn" id="clearBtn">クリア</button>
+    </div>
+    <ul class="history-list" id="historyList"></ul>
+  </div>
+</div>
+
+<script>
+  // ─────────────────────────────────────────────────────────────────────────
+  // DateCalc.html — Python API 呼び出し版
+  //
+  // calculate() 関数のみを fetch(/api/calculate) に差し替え、
+  // 計算ロジックをすべて DateCalc.py (Flask サーバー) 側で処理します。
+  // UI・入力バリデーション・フォーカス移動は元の実装をそのまま維持します。
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // ── 今日の表示（Python API から取得） ────────────────────────────────────
+  fetch('/api/today')
+    .then(r => r.json())
+    .then(t => {
+      document.getElementById('todayBadge').textContent =
+        `今日 — ${t.year}年${t.month}月${t.day}日(${t.weekday})`;
+    })
+    .catch(() => {
+      // サーバーに繋がらない場合はブラウザ側の日付でフォールバック
+      const WEEKDAYS = ["月","火","水","木","金","土","日"];
+      const d = new Date();
+      const wd = WEEKDAYS[d.getDay() === 0 ? 6 : d.getDay() - 1];
+      document.getElementById('todayBadge').textContent =
+        `今日 — ${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日(${wd})`;
+    });
+
+  const yearInput      = document.getElementById('yearInput');
+  const monthInput     = document.getElementById('monthInput');
+  const dayInput       = document.getElementById('dayInput');
+  const resultArea     = document.getElementById('resultArea');
+  const historySection = document.getElementById('historySection');
+  const historyList    = document.getElementById('historyList');
+  const calcBtn        = document.getElementById('calcBtn');
+  const clearInputBtn  = document.getElementById('clearInputBtn');
+  const clearBtn       = document.getElementById('clearBtn');
+
+  // ── 年フィールド：マイナス記号（先頭のみ）と数字だけを受け付ける ─────────
+  yearInput.addEventListener('keydown', ev => {
+    if (['Backspace','Delete','Tab','ArrowLeft','ArrowRight','Enter'].includes(ev.key)) return;
+    if (ev.key === '-') {
+      if (yearInput.selectionStart === 0 && !yearInput.value.startsWith('-')) return;
+      ev.preventDefault(); return;
+    }
+    if (!/^\d$/.test(ev.key)) { ev.preventDefault(); return; }
+    const pos = yearInput.selectionStart;
+    const val = yearInput.value;
+    const effectiveStart = val.startsWith('-') ? 1 : 0;
+    if (pos === effectiveStart && ev.key === '0') { ev.preventDefault(); return; }
+  });
+  yearInput.addEventListener('input', () => {
+    let v = yearInput.value;
+    const neg = v.startsWith('-');
+    let digits = v.replace(/[^\d]/g, '').replace(/^0+/, '');
+    v = (neg ? '-' : '') + digits;
+    if (yearInput.value !== v) yearInput.value = v;
+  });
+  yearInput.addEventListener('blur', () => {
+    const val = parseInt(yearInput.value, 10);
+    if (isNaN(val) || val === 0) { yearInput.value = ''; return; }
+    if (val > 9999)  { yearInput.value = '9999'; return; }
+    if (val < -999)  { yearInput.value = '-999'; return; }
+  });
+
+  // ── 月・日フィールド：数字のみ、範囲外は自動補正 ────────────────────────
+  function makeNumericOnly(input, min, max) {
+    input.addEventListener('keydown', ev => {
+      if (['Backspace','Delete','Tab','ArrowLeft','ArrowRight','Enter'].includes(ev.key)) return;
+      if (!/^\d$/.test(ev.key)) { ev.preventDefault(); return; }
+      if (ev.key === '0' && input.value === '') { ev.preventDefault(); return; }
+    });
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/[^\d]/g, '').replace(/^0+/, '');
+    });
+    input.addEventListener('blur', () => {
+      const val = parseInt(input.value, 10);
+      if (!isNaN(val)) {
+        if (val < min) input.value = min;
+        else if (val > max) input.value = max;
+      }
+    });
+  }
+
+  makeNumericOnly(monthInput, 1, 99);
+  makeNumericOnly(dayInput,   1, 99);
+
+  // ── フィールド間フォーカス移動 ───────────────────────────────────────────
+  function moveFocus(target, toEnd) {
+    target.focus();
+    const pos = toEnd ? target.value.length : 0;
+    target.setSelectionRange(pos, pos);
+  }
+
+  yearInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); moveFocus(monthInput, false); }
+    if (e.key === 'ArrowRight' && yearInput.selectionStart === yearInput.value.length && yearInput.selectionEnd === yearInput.value.length) {
+      e.preventDefault(); moveFocus(monthInput, false);
+    }
+  });
+  monthInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); moveFocus(dayInput, false); }
+    if (e.key === 'Backspace' && monthInput.value === '') { e.preventDefault(); moveFocus(yearInput, true); }
+    if (e.key === 'ArrowRight' && monthInput.selectionStart === monthInput.value.length && monthInput.selectionEnd === monthInput.value.length) {
+      e.preventDefault(); moveFocus(dayInput, false);
+    }
+    if (e.key === 'ArrowLeft' && monthInput.selectionStart === 0 && monthInput.selectionEnd === 0) {
+      e.preventDefault(); moveFocus(yearInput, true);
+    }
+  });
+  dayInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); calculate(); }
+    if (e.key === 'Backspace' && dayInput.value === '') { e.preventDefault(); moveFocus(monthInput, true); }
+    if (e.key === 'ArrowLeft' && dayInput.selectionStart === 0 && dayInput.selectionEnd === 0) {
+      e.preventDefault(); moveFocus(monthInput, true);
+    }
+  });
+
+  // ── 履歴 ─────────────────────────────────────────────────────────────────
+  let history = [];
+
+  function renderHistory() {
+    if (history.length === 0) { historySection.style.display = 'none'; return; }
+    historySection.style.display = 'block';
+    historyList.innerHTML = history.map((h, i) => `
+      <li class="history-item" data-index="${i}">
+        <span class="history-item-date">${h.dateStr}</span>
+        <span class="history-item-diff ${h.cls}">${h.diffLabel}</span>
+      </li>`).join('');
+  }
+
+  // ── 計算：fetch で Python API を呼び出す ──────────────────────────────────
+  async function calculate() {
+    const yStr = yearInput.value.trim();
+    const mStr = monthInput.value.trim();
+    const dStr = dayInput.value.trim();
+    if (!yStr || !mStr || !dStr) return;
+
+    // ボタンを無効化して二重送信を防止
+    calcBtn.disabled = true;
+
+    try {
+      const params = new URLSearchParams({ year: yStr, month: mStr, day: dStr });
+      const res  = await fetch(`/api/calculate?${params}`);
+      const data = await res.json();
+
+      if (!data.ok) {
+        // Python 側からのエラー（存在しない日付など）
+        resultArea.innerHTML =
+          `<div class="result-card is-error"><div class="error-msg">${data.error}</div></div>`;
+        return;
+      }
+
+      // 正常結果を表示
+      resultArea.innerHTML = `
+        <div class="result-card is-${data.cls}">
+          <div class="result-date">${data.date_label}</div>
+          <div class="result-diff">${data.diff_label}</div>
+        </div>`;
+
+      // 履歴に追加（重複は先頭に移動、最大 8 件）
+      const entry = { dateStr: data.date_label, diff: data.diff, diffLabel: data.diff_label, cls: data.cls };
+      history = [entry, ...history.filter(h => h.dateStr !== entry.dateStr)].slice(0, 8);
+      renderHistory();
+
+    } catch (err) {
+      // ネットワークエラー・サーバー未起動など
+      resultArea.innerHTML =
+        `<div class="result-card is-error"><div class="error-msg">` +
+        `サーバーに接続できません。<br>` +
+        `DateCalc_server.py が起動しているか確認してください。</div></div>`;
+    } finally {
+      calcBtn.disabled = false;
+    }
+  }
+
+  // ── イベント登録 ──────────────────────────────────────────────────────────
+  calcBtn.addEventListener('click', calculate);
+
+  clearInputBtn.addEventListener('click', () => {
+    yearInput.value  = '';
+    monthInput.value = '';
+    dayInput.value   = '';
+    resultArea.innerHTML = '';
+    yearInput.focus();
+  });
+
+  clearBtn.addEventListener('click', () => {
+    history = [];
+    renderHistory();
+  });
+</script>
+</body>
+</html>
