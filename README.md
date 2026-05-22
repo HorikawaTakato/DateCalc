@@ -21,7 +21,7 @@ Webブラウザで使用できます。
 ```
 DateCalc/
 ├── DateCalc.html        # Webフロントエンド
-├── DateCalc.py          # 計算ロジック + CLIインターフェース
+├── DateCalc.py          # 計算ロジック
 ├── DateCalc_server.py   # Flask Webサーバー（API）
 ├── DateCalc_test.py     # テスト
 └── requirements.txt     # 依存パッケージ
