@@ -100,7 +100,7 @@ docker compose ps
 
 `STATUS` が `running` であれば正常に動作しています。
 
-### ログの確認
+### ログ確認
 
 ```
 docker compose logs
