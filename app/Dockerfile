@@ -15,7 +15,7 @@ FROM python:3.12-slim
 
 # GHCR連携用ビルド引数（docker build --build-arg で上書き可能）
 ARG IMAGE_VERSION=latest
-ARG GITHUB_REPOSITORY=HorikawaTakato/DateCalc
+ARG GITHUB_REPOSITORY=horikawatakato/datecalc
 ARG GITHUB_SERVER_URL=https://github.com
 
 # OCI標準ラベル（GHCRがリポジトリと自動紐づけするために必要）
