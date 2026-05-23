@@ -37,33 +37,77 @@ DateCalc/
 
 ## 動作環境
 
-- Docker Desktop
+- Docker Desktop 4.0 以上
+  - Windows：WSL2 が有効であること
+  - Mac / Linux：Docker Desktop または Docker Engine が起動していること
+- ブラウザ：Chrome / Edge / Firefox など（最新版推奨）
 
 ---
 
 ## セットアップ
 
-```
-# リポジトリをクローン
-git clone https://github.com/HorikawaTakato/DateCalc.git
-cd DateCalc
+### 1. Docker Desktop を起動する
 
-# イメージをビルドして起動
+### 2. リポジトリをクローンする
+
+```
+git clone https://github.com/HorikawaTakato/DateCalc.git && cd DateCalc
+```
+
+### 3. イメージをビルドして起動する
+
+```
 docker compose up --build
+```
+
+以下のログが表示されれば起動成功です。
+
+```
+web-1    | [INFO] Booting worker with pid: ...
+nginx-1  | Configuration complete; ready for start up
+```
+
+初回はイメージのダウンロードとビルドのため数分かかります。
+2回目以降は `--build` を省略できます。
+
+```
+docker compose up
 ```
 
 ---
 
 ## 使い方
 
+### 起動
+
 ```
-# 起動
 docker compose up -d
 ```
 
+`-d` オプションでバックグラウンド起動になります。  
 起動後、Webブラウザで `http://localhost` を開きます。
 
+### 状態確認
+
 ```
-# 停止
+docker compose ps
+```
+
+`STATUS` が `running` であれば正常に動作しています。
+
+### ログの確認
+
+```
+docker compose logs -f
+```
+
+`Ctrl+C` でログ表示を終了します（コンテナは停止しません）。
+
+### 停止
+
+```
 docker compose down
 ```
+
+コンテナを停止して削除します。イメージはそのまま残るため、  
+次回起動時に再ビルドは不要です。
