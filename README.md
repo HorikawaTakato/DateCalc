@@ -53,12 +53,12 @@ DateCalc/
 ```
 git clone https://github.com/HorikawaTakato/DateCalc.git
 ```
-```
-cd DateCalc
-```
 
 ### 3. イメージをビルドして起動する
 
+```
+cd DateCalc
+```
 ```
 docker compose up --build
 ```
