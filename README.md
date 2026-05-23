@@ -67,7 +67,9 @@ docker compose up --build
 
 `
 web-1    | [INFO] Booting worker with pid: ...
+`
 
+`
 nginx-1  | Configuration complete; ready for start up
 `
 
