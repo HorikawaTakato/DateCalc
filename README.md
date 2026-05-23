@@ -51,7 +51,10 @@ DateCalc/
 ### 2. リポジトリをクローンする
 
 ```
-git clone https://github.com/HorikawaTakato/DateCalc.git && cd DateCalc
+git clone https://github.com/HorikawaTakato/DateCalc.git
+```
+```
+cd DateCalc
 ```
 
 ### 3. イメージをビルドして起動する
