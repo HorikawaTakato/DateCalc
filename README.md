@@ -65,10 +65,10 @@ docker compose up --build
 
 以下のログが表示されれば起動成功です。
 
-```
+`
 web-1    | [INFO] Booting worker with pid: ...
 nginx-1  | Configuration complete; ready for start up
-```
+`
 
 初回はイメージのダウンロードとビルドのため数分かかります。
 2回目以降は `--build` を省略できます。
@@ -101,10 +101,8 @@ docker compose ps
 ### ログの確認
 
 ```
-docker compose logs -f
+docker compose logs
 ```
-
-`Ctrl+C` でログ表示を終了します（コンテナは停止しません）。
 
 ### 停止
 
