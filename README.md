@@ -74,7 +74,6 @@ nginx-1  | Configuration complete; ready for start up
 `
 
 初回はイメージのダウンロードとビルドを実行します。
-
 2回目以降は `--build` を省略できます。
 
 ---
