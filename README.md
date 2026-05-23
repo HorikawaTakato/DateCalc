@@ -51,7 +51,7 @@ DateCalc/
 ### 2. リポジトリをクローンする
 
 ```
-cd [クローン先のパス]
+cd [クローン先ディレクトリ]
 ```
 ```
 git clone https://github.com/HorikawaTakato/DateCalc.git
