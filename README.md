@@ -1,7 +1,7 @@
 # 日数計算機
 
-現在の日付と入力した日付の差分を計算するツールです。  
-Webブラウザで使用できます。
+現在の日付と入力した日付の差分を計算します。
+Dockerを使用したWebアプリケーションです。  
 
 ---
 
@@ -51,28 +51,33 @@ DateCalc/
 ### 2. リポジトリをクローンする
 
 ```
-git clone https://github.com/HorikawaTakato/DateCalc.git && cd DateCalc
+cd [クローン先ディレクトリ]
+```
+```
+git clone https://github.com/HorikawaTakato/DateCalc.git
 ```
 
 ### 3. イメージをビルドして起動する
 
+```
+cd DateCalc
+```
 ```
 docker compose up --build
 ```
 
 以下のログが表示されれば起動成功です。
 
-```
+`
 web-1    | [INFO] Booting worker with pid: ...
+`
+
+`
 nginx-1  | Configuration complete; ready for start up
-```
+`
 
-初回はイメージのダウンロードとビルドのため数分かかります。
+初回はイメージのダウンロードとビルドを実行します。
 2回目以降は `--build` を省略できます。
-
-```
-docker compose up
-```
 
 ---
 
@@ -95,13 +100,11 @@ docker compose ps
 
 `STATUS` が `running` であれば正常に動作しています。
 
-### ログの確認
+### ログ確認
 
 ```
-docker compose logs -f
+docker compose logs
 ```
-
-`Ctrl+C` でログ表示を終了します（コンテナは停止しません）。
 
 ### 停止
 
