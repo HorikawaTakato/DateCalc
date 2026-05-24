@@ -142,24 +142,12 @@ git --version
 
 ---
 
-### GitHubアカウント（GHCRを利用する場合）
-
-GHCRからイメージを取得するには GitHubアカウントと Personal Access Token (PAT) が必要です。
-
-| 用途 | 必要なスコープ |
-|---|---|
-| イメージの取得（pull）のみ | `read:packages` |
-| イメージのpush | `read:packages` `write:packages` |
-
-PATの作成手順：GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
-
----
-
 ## セットアップ
 
 ### 方法1：GitHub Container Registry (GHCR) からイメージを取得して起動する（推奨）
 
-ビルド不要でGHCRに公開済みのイメージをそのまま使用できます。
+GHCRのイメージはPublicで公開されています。ビルドは不要です。
+イメージの取得（pull）に認証は不要です。
 
 #### 1. Docker Desktop を起動する
 
@@ -174,37 +162,7 @@ docker info
 
 エラーなく情報が表示されれば起動しています。
 
-#### 2. Personal Access Token (PAT) を作成する
-
-GitHubにログインし、以下の手順でPATを作成します。
-
-1. 右上のアイコン → **Settings**
-2. 左メニュー一番下 → **Developer settings**
-3. **Personal access tokens** → **Tokens (classic)**
-4. **Generate new token (classic)** をクリック
-5. 以下のスコープにチェックを入れる
-   - ✅ `read:packages`
-6. **Generate token** をクリックしてトークンをコピーする
-
-> ⚠️ トークンは作成直後にしか表示されません。必ずコピーして控えておいてください。
-
-#### 3. GHCRにログインする
-
-```powershell
-# Windows (PowerShell)
-$env:CR_PAT = "ghp_xxxxxxxxxxxxxxxxxxxx"   # ← コピーしたトークンに置き換える
-$env:CR_PAT | docker login ghcr.io -u GitHubユーザー名 --password-stdin
-```
-
-```bash
-# Mac / Linux
-export CR_PAT=ghp_xxxxxxxxxxxxxxxxxxxx   # ← コピーしたトークンに置き換える
-echo $CR_PAT | docker login ghcr.io -u GitHubユーザー名 --password-stdin
-```
-
-`Login Succeeded` と表示されればログイン完了です。
-
-#### 4. リポジトリをクローンする
+#### 2. リポジトリをクローンする
 
 ```
 git clone https://github.com/horikawatakato/datecalc.git
@@ -216,13 +174,12 @@ git clone https://github.com/horikawatakato/datecalc.git
 cd datecalc
 ```
 
-#### 5. コンテナを起動する
+#### 3. コンテナを起動する
 
 ```
 docker compose up -d
 ```
 
-GHCRからイメージを自動取得してコンテナを起動します。ビルドは不要です。
 初回はイメージのダウンロードが行われるため、数分かかる場合があります。
 
 起動確認コマンド：
