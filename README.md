@@ -33,7 +33,8 @@ datecalc/
     ├── wsgi.py               # Gunicornエントリポイント
     ├── DateCalc.py           # 計算ロジック
     ├── DateCalc_server.py    # Flask Webサーバー（API）
-    └── DateCalc.html         # Webフロントエンド
+    ├── DateCalc.html         # Webフロントエンド
+    └── test_DateCalc.py      # ユニットテスト（pytest）
 ```
 
 ---
@@ -49,6 +50,10 @@ datecalc/
   ↓
 GitHub Actions 起動（.github/workflows/build-push.yml）
   ↓
+Python 3.14 セットアップ・依存パッケージインストール
+  ↓
+pytest によるユニットテスト実行
+  ↓（テスト失敗時はここで停止）
 GITHUB_TOKEN 自動発行（追加シークレット不要）
   ↓
 GHCR へ自動ログイン
@@ -152,7 +157,7 @@ docker compose version
 
 | コンポーネント | バージョン | 役割 |
 |---|---|---|
-| Python | 3.12 (slim) | アプリケーション実行環境 |
+| Python | 3.14 (slim) | アプリケーション実行環境 |
 | Flask | 3.1.0 | Webフレームワーク |
 | Gunicorn | 23.0.0 | WSGIサーバー（本番向け） |
 | Nginx | 1.27 (alpine) | リバースプロキシ |
