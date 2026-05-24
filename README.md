@@ -18,7 +18,7 @@ Dockerを使用したWebアプリケーションです。
 ## ファイル構成
 
 ```
-DateCalc/
+datecalc/
 ├── docker-compose.yml       # コンテナ構成定義
 ├── .gitignore
 ├── nginx/
@@ -207,13 +207,13 @@ echo $CR_PAT | docker login ghcr.io -u GitHubユーザー名 --password-stdin
 #### 4. リポジトリをクローンする
 
 ```
-git clone https://github.com/horikawatakato/DateCalc.git
+git clone https://github.com/horikawatakato/datecalc.git
 ```
 
 クローンしたフォルダに移動します。
 
 ```
-cd DateCalc
+cd datecalc
 ```
 
 #### 5. コンテナを起動する
@@ -247,8 +247,8 @@ docker compose ps
 #### 2. リポジトリをクローンする
 
 ```
-git clone https://github.com/horikawatakato/DateCalc.git
-cd DateCalc
+git clone https://github.com/horikawatakato/datecalc.git
+cd datecalc
 ```
 
 #### 3. イメージをビルドする
