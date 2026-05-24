@@ -19,18 +19,79 @@ Dockerを使用したWebアプリケーションです。
 
 ```
 datecalc/
-├── docker-compose.yml       # コンテナ構成定義
+├── .github/
+│   └── workflows/
+│       └── build-push.yml   # GitHub Actions：自動ビルド＆GHCRプッシュ
+├── docker-compose.yml        # コンテナ構成定義
 ├── .gitignore
 ├── nginx/
-│   └── nginx.conf           # リバースプロキシ設定
+│   └── nginx.conf            # リバースプロキシ設定
 └── app/
     ├── Dockerfile
-    ├── requirements.txt     # 依存パッケージ
-    ├── gunicorn.conf.py     # Gunicorn設定
-    ├── wsgi.py              # Gunicornエントリポイント
-    ├── DateCalc.py          # 計算ロジック
-    ├── DateCalc_server.py   # Flask Webサーバー（API）
-    └── DateCalc.html        # Webフロントエンド
+    ├── requirements.txt      # 依存パッケージ
+    ├── gunicorn.conf.py      # Gunicorn設定
+    ├── wsgi.py               # Gunicornエントリポイント
+    ├── DateCalc.py           # 計算ロジック
+    ├── DateCalc_server.py    # Flask Webサーバー（API）
+    └── DateCalc.html         # Webフロントエンド
+```
+
+---
+
+## CI/CD（GitHub Actions + GHCR）
+
+`main` ブランチへのプッシュをトリガーに、イメージのビルドとGHCRへのプッシュが自動実行されます。
+
+### ワークフローの流れ
+
+```
+コードを main ブランチへ Push
+  ↓
+GitHub Actions 起動（.github/workflows/build-push.yml）
+  ↓
+GITHUB_TOKEN 自動発行（追加シークレット不要）
+  ↓
+GHCR へ自動ログイン
+  ↓
+イメージをビルド（GHCRのキャッシュを活用して高速化）
+  ↓
+タグを自動生成（latest / sha-xxxxxxx / ブランチ名）
+  ↓
+ghcr.io/horikawatakato/datecalc へ Push
+```
+
+### 自動生成されるタグ
+
+| Gitイベント | 生成されるタグ例 |
+|---|---|
+| `main` へのプッシュ | `latest`, `main`, `sha-abc1234` |
+| `v1.2.3` タグのプッシュ | `1.2.3`, `1.2`, `1`, `latest` |
+| プルリクエスト | `pr-42`（GHCRへのプッシュはスキップ） |
+
+### イメージに埋め込まれるメタデータ
+
+Dockerfileの `ARG` を通じて、以下の情報がOCIラベルとしてイメージに記録されます。
+GHCR の「Package」ページで確認できます。
+
+| ラベル | 内容 |
+|---|---|
+| `org.opencontainers.image.created` | ビルド日時（ISO8601形式） |
+| `org.opencontainers.image.revision` | ビルド元のコミットSHA |
+| `org.opencontainers.image.source` | リポジトリURL |
+| `org.opencontainers.image.version` | イメージバージョン |
+
+### ワークフロー実行結果の確認
+
+GitHub リポジトリの「Actions」タブでビルドの成否と以下の情報を確認できます。
+
+```
+✅ Image pushed to GHCR
+┌──────────┬──────────────────────────────────────────┐
+│ Registry │ ghcr.io                                  │
+│ Image    │ horikawatakato/datecalc                  │
+│ Digest   │ sha256:abc123...                         │
+│ Tags     │ latest, main, sha-abc1234                │
+└──────────┴──────────────────────────────────────────┘
 ```
 
 ---
@@ -146,8 +207,8 @@ git --version
 
 ### 方法1：GitHub Container Registry (GHCR) からイメージを取得して起動する（推奨）
 
-GHCRのイメージはPublicで公開されています。ビルドは不要です。
-イメージの取得（pull）に認証は不要です。
+GHCRのイメージはPublicで公開されています。
+イメージの取得（pull）に認証は不要です。ビルドは不要です。
 
 #### 1. Docker Desktop を起動する
 
@@ -336,17 +397,57 @@ docker compose down --rmi all
 
 ### 最新イメージへの更新
 
-GHCRに新しいイメージがpushされた場合は以下で更新できます。
+`main` ブランチへのプッシュ後、GitHub Actions が自動的にビルド＆GHCRへのプッシュを行います。
+新しいイメージへの更新は以下の手順で行います。
+
+#### GHCR から最新イメージを取得して再起動する
 
 ```
 docker compose pull
 docker compose up -d
 ```
 
-更新前後のイメージを確認するには以下を実行します。
+#### 特定のコミットSHAのイメージで起動する
+
+GitHub Actions が自動生成した `sha-xxxxxxx` タグを指定して起動することで、
+特定のコミット時点のイメージを使用できます。
+
+```
+# 例：コミット SHA が abc1234 の場合
+IMAGE_TAG=sha-abc1234 docker compose up -d
+```
+
+または `.env` ファイルに記載して起動します。
+
+```
+# .env ファイル
+IMAGE_TAG=sha-abc1234
+```
+
+```
+docker compose up -d
+```
+
+> ℹ️ `IMAGE_TAG` を指定しない場合は `latest` タグのイメージが使用されます。
+
+#### 更新前後のイメージを確認する
 
 ```
 docker images | grep datecalc
 ```
 
+#### イメージのビルド情報を確認する
 
+GHCRにプッシュされたイメージには、ビルド日時とコミットSHAが記録されています。
+以下のコマンドで確認できます。
+
+```
+docker inspect ghcr.io/horikawatakato/datecalc:latest \
+  --format '{{index .Config.Labels "org.opencontainers.image.created"}} / {{index .Config.Labels "org.opencontainers.image.revision"}}'
+```
+
+出力例：
+
+```
+2025-05-24T10:00:00Z / abc1234def5678...
+```

@@ -17,13 +17,17 @@ FROM python:3.12-slim
 ARG IMAGE_VERSION=latest
 ARG GITHUB_REPOSITORY=horikawatakato/datecalc
 ARG GITHUB_SERVER_URL=https://github.com
+ARG BUILD_DATE=unknown
+ARG GIT_REVISION=unknown
 
 # OCI標準ラベル（GHCRがリポジトリと自動紐づけするために必要）
 LABEL org.opencontainers.image.title="DateCalc" \
       org.opencontainers.image.description="Date calculation web app (Flask + Gunicorn)" \
       org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.opencontainers.image.source="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
-      org.opencontainers.image.licenses="MIT"
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.revision="${GIT_REVISION}"
 
 # セキュリティ: 非 root ユーザーで実行
 RUN useradd --create-home appuser

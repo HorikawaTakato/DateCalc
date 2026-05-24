@@ -14,7 +14,9 @@ services:
 
   # ── Flask + Gunicorn (DateCalc) ───────────────────────────────────────────
   web:
-    image: ghcr.io/horikawatakato/datecalc:latest
+    # IMAGE_TAG は GitHub Actions が SHA タグを .env に書き出して渡す
+    # ローカル起動時のフォールバックとして latest を使用
+    image: ghcr.io/horikawatakato/datecalc:${IMAGE_TAG:-latest}
     expose:
       - "8000"           # Nginx からのみアクセス可。外部には公開しない。
     healthcheck:
