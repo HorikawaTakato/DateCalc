@@ -114,7 +114,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:sha-${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:sha-${{ steps.meta.outputs.version }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:cache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:cache,mode=max
 
