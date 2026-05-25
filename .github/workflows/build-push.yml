@@ -177,25 +177,30 @@ jobs:
             sleep 15
           fi
 
-      # ── ③ タスク定義の web コンテナイメージを最新の SHA タグで更新 ──────────
+      # ── ④ 短縮 SHA を生成 ────────────────────────────────────────────────
+      - name: Get short SHA
+        id: short-sha
+        run: echo "sha=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      # ── ⑤ タスク定義の web コンテナイメージを最新の SHA タグで更新 ──────────
       - name: Render ECS task definition for web
         id: task-def-web
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
           container-name: web
-          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ steps.short-sha.outputs.sha }}
 
-      # ── ④ タスク定義の nginx コンテナイメージを最新の SHA タグで更新 ─────────
+      # ── ⑥ タスク定義の nginx コンテナイメージを最新の SHA タグで更新 ─────────
       - name: Render ECS task definition for nginx
         id: task-def-nginx
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ${{ steps.task-def-web.outputs.task-definition }}
           container-name: nginx
-          image: ${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:sha-${{ github.sha }}
+          image: ${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:sha-${{ steps.short-sha.outputs.sha }}
 
-      # ── ⑤ ECS サービスにデプロイ ────────────────────────────────────────────
+      # ── ⑦ ECS サービスにデプロイ ────────────────────────────────────────────
       #      デプロイ完了まで待機（タイムアウト：10分）
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
