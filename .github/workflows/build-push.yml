@@ -106,15 +106,23 @@ jobs:
 
       # ── ⑥ Nginx イメージのビルド＆GHCR へ Push ────────────────────────────
       #      nginx.conf を含んだカスタム Nginx イメージをビルドして Push する
+      - name: Extract metadata for nginx image
+        id: meta-nginx
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=ref,event=branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
       - name: Build and push nginx image
         uses: docker/build-push-action@v7
         with:
           context: ./nginx         # ビルドコンテキストを nginx/ に変更
           file: ./nginx/Dockerfile  # Nginx 用 Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:sha-${{ steps.meta.outputs.version }}
+          tags: ${{ steps.meta-nginx.outputs.tags }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:cache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:cache,mode=max
 
@@ -148,7 +156,7 @@ jobs:
 
       # ── ② AWS 認証（OIDC）────────────────────────────────────────────────
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
