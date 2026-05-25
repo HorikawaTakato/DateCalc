@@ -1,0 +1,67 @@
+{
+  "family": "datecalc-task",
+  "executionRoleArn": "arn:aws:iam::291066412387:role/ecsTaskExecutionRole",
+  "networkMode": "bridge",
+  "containerDefinitions": [
+    {
+      "name": "web",
+      "image": "ghcr.io/horikawatakato/datecalc:latest",
+      "cpu": 256,
+      "memory": 384,
+      "portMappings": [],
+      "environment": [
+        {
+          "name": "TZ",
+          "value": "Asia/Tokyo"
+        }
+      ],
+      "essential": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/datecalc",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    },
+    {
+      "name": "nginx",
+      "image": "ghcr.io/horikawatakato/datecalc-nginx:latest",
+      "cpu": 128,
+      "memory": 128,
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 80,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "TZ",
+          "value": "Asia/Tokyo"
+        }
+      ],
+      "essential": true,
+      "links": ["web:web"],
+      "dependsOn": [
+        {
+          "containerName": "web",
+          "condition": "START"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/datecalc",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "ecs-nginx"
+        }
+      }
+    }
+  ],
+  "requiresCompatibilities": ["EC2"],
+  "cpu": "384",
+  "memory": "512"
+}
