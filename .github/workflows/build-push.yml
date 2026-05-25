@@ -153,6 +153,30 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # ── ③ 実行中の古いタスクを停止してポートを解放 ──────────────────────────
+      #      EC2起動タイプではポート80が占有されると新タスクが起動できないため
+      #      デプロイ前に古いタスクを停止する
+      - name: Stop running tasks
+        run: |
+          TASK_ARNS=$(aws ecs list-tasks \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service-name ${{ secrets.ECS_SERVICE }} \
+            --desired-status RUNNING \
+            --region ${{ secrets.AWS_REGION }} \
+            --query 'taskArns' \
+            --output text)
+          if [ -n "$TASK_ARNS" ]; then
+            for TASK_ARN in $TASK_ARNS; do
+              echo "Stopping task: $TASK_ARN"
+              aws ecs stop-task \
+                --cluster ${{ secrets.ECS_CLUSTER }} \
+                --task $TASK_ARN \
+                --region ${{ secrets.AWS_REGION }}
+            done
+            echo "Waiting for tasks to stop..."
+            sleep 15
+          fi
+
       # ── ③ タスク定義の web コンテナイメージを最新の SHA タグで更新 ──────────
       - name: Render ECS task definition for web
         id: task-def-web
