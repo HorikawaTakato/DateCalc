@@ -7,7 +7,8 @@
       "name": "web",
       "image": "ghcr.io/horikawatakato/datecalc:latest",
       "cpu": 256,
-      "memory": 384,
+      "memory": 200,
+      "memoryReservation": 100,
       "portMappings": [],
       "environment": [
         {
@@ -29,7 +30,8 @@
       "name": "nginx",
       "image": "ghcr.io/horikawatakato/datecalc-nginx:latest",
       "cpu": 128,
-      "memory": 128,
+      "memory": 100,
+      "memoryReservation": 50,
       "portMappings": [
         {
           "containerPort": 80,
@@ -61,7 +63,5 @@
       }
     }
   ],
-  "requiresCompatibilities": ["EC2"],
-  "cpu": "384",
-  "memory": "512"
+  "requiresCompatibilities": ["EC2"]
 }
