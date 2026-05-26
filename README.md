@@ -1,7 +1,7 @@
 # 日数計算機
 
-現在の日付と入力した日付の差分を計算するWebアプリケーションです。  
-AWS ECS on EC2 でコンテナ運用し、GitHub Actions による CI/CD を構築しています。  
+日数計算を行うWebアプリケーションです。  
+AWS ECS on EC2 でコンテナ運用し、GitHub Actions による CI/CD を構築しています。
 
 ---
 
@@ -137,5 +137,7 @@ main ブランチへ Push すると `.github/workflows/build-push.yml` が起動
 |---|---|---|---|
 | web | `ghcr.io/horikawatakato/datecalc` | 8000（内部のみ） | 200MB |
 | nginx | `ghcr.io/horikawatakato/datecalc-nginx` | 80（外部公開） | 100MB |
+
+---
 
 ## License: MIT
