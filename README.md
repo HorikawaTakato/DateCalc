@@ -2,8 +2,6 @@
 
 現在の日付と入力した日付の差分を計算するWebアプリケーションです。  
 AWS ECS on EC2 でコンテナ運用し、GitHub Actions による CI/CD を構築しています。  
-以下のURLからアクセスできます。  
-http://ec2-3-114-247-73.ap-northeast-1.compute.amazonaws.com
 
 ---
 
@@ -23,22 +21,25 @@ http://ec2-3-114-247-73.ap-northeast-1.compute.amazonaws.com
 datecalc/
 ├── .github/
 │   └── workflows/
-│       └── build-push.yml    # GitHub Actions：テスト・ビルド・ECS 自動デプロイ
-├── docker-compose.yml        # コンテナ構成定義（ローカル開発用）
-├── task-definition.json      # AWS ECS タスク定義
-├── .gitignore
+│       └── build-push.yml      # GitHub Actions：テスト・ビルド・ECS 自動デプロイ
+├── app/
+│   ├── DateCalc.html           # Web フロントエンド
+│   ├── DateCalc.py             # 計算ロジック
+│   ├── DateCalc_server.py      # Flask Web サーバー（API）
+│   ├── Dockerfile
+│   ├── gunicorn.conf.py        # Gunicorn 設定
+│   ├── requirements.txt        # 依存パッケージ（Flask・Gunicorn）
+│   ├── test_DateCalc.py        # ユニットテスト（pytest）
+│   └── wsgi.py                 # Gunicorn エントリポイント
 ├── nginx/
-│   ├── nginx.conf            # リバースプロキシ設定
-│   └── Dockerfile            # カスタム Nginx イメージ用
-└── app/
-    ├── Dockerfile
-    ├── requirements.txt      # 依存パッケージ（Flask・Gunicorn）
-    ├── gunicorn.conf.py      # Gunicorn 設定
-    ├── wsgi.py               # Gunicorn エントリポイント
-    ├── DateCalc.py           # 計算ロジック
-    ├── DateCalc_server.py    # Flask Web サーバー（API）
-    ├── DateCalc.html         # Web フロントエンド
-    └── test_DateCalc.py      # ユニットテスト（pytest）
+│   ├── Dockerfile              # カスタム Nginx イメージ用
+│   └── nginx.conf              # リバースプロキシ設定
+├── .gitignore                  # Git 管理除外設定
+├── LICENSE                     # MITライセンス
+├── README.md                   # プロジェクト説明
+├── container-architecture.svg  # コンテナ構成図
+├── docker-compose.yml          # コンテナ構成定義（ローカル開発用）
+└── task-definition.json        # AWS ECS タスク定義
 ```
 
 ---
@@ -128,7 +129,7 @@ main ブランチへ Push すると `.github/workflows/build-push.yml` が起動
 | IAM ロール（デプロイ用） | `GitHubActionsECSDeployRole` | OIDC 認証 |
 | IAM ロール（タスク実行用） | `ecsTaskExecutionRole` | イメージ Pull 用 |
 | CloudWatch Logs | `/ecs/datecalc` | コンテナログ |
-| リージョン | `ap-northeast-1`（東京） | |
+| リージョン | `ap-northeast-1` | 東京リージョン |
 
 ### タスク定義
 
@@ -136,3 +137,5 @@ main ブランチへ Push すると `.github/workflows/build-push.yml` が起動
 |---|---|---|---|
 | web | `ghcr.io/horikawatakato/datecalc` | 8000（内部のみ） | 200MB |
 | nginx | `ghcr.io/horikawatakato/datecalc-nginx` | 80（外部公開） | 100MB |
+
+## License: MIT
