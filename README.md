@@ -115,5 +115,5 @@ main ブランチへ Push すると `.github/workflows/build-push.yml` が起動
 
 ---
 
-MIT License
-Copyright (c) 2026 horikawatakato
+Copyright (c) 2026 horikawatakato  
+Released under the MIT License.
