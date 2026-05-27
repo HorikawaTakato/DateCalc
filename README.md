@@ -115,29 +115,5 @@ main ブランチへ Push すると `.github/workflows/build-push.yml` が起動
 
 ---
 
-## AWS ECS 構成
-
-### リソース一覧
-
-| リソース | 名前 | 備考 |
-|---|---|---|
-| ECS クラスター | `datecalc-cluster` | EC2 起動タイプ |
-| ECS サービス | `datecalc-service` | タスク数：1 |
-| ECS タスク定義 | `datecalc-task` | 2コンテナ構成 |
-| EC2 インスタンス | `t3.micro` | 無料枠対象 |
-| Elastic IP | `3.114.247.73` | EC2 再起動後も IP 固定 |
-| IAM ロール（デプロイ用） | `GitHubActionsECSDeployRole` | OIDC 認証 |
-| IAM ロール（タスク実行用） | `ecsTaskExecutionRole` | イメージ Pull 用 |
-| CloudWatch Logs | `/ecs/datecalc` | コンテナログ |
-| リージョン | `ap-northeast-1` | 東京リージョン |
-
-### タスク定義
-
-| コンテナ名 | イメージ | ポート | メモリ |
-|---|---|---|---|
-| web | `ghcr.io/horikawatakato/datecalc` | 8000（内部のみ） | 200MB |
-| nginx | `ghcr.io/horikawatakato/datecalc-nginx` | 80（外部公開） | 100MB |
-
----
-
-## License: MIT
+MIT License
+Copyright (c) 2026 horikawatakato
