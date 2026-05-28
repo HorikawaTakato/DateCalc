@@ -168,8 +168,8 @@ jobs:
         run: |
           docker load --input /tmp/web.tar
           # build ジョブで付与したタグをすべて Push する
-          for tag in ${{ join(fromJSON(needs.build.outputs.web_tags), ' ') }}; do
-            docker push "$tag"
+          echo '${{ needs.build.outputs.web_tags }}' | while read -r tag; do
+            [ -n "$tag" ] && docker push "$tag"
           done
 
       # ── ④ Nginx イメージ tar をダウンロード ──────────────────────────────────
@@ -183,8 +183,8 @@ jobs:
       - name: Push nginx image
         run: |
           docker load --input /tmp/nginx.tar
-          for tag in ${{ join(fromJSON(needs.build.outputs.nginx_tags), ' ') }}; do
-            docker push "$tag"
+          echo '${{ needs.build.outputs.nginx_tags }}' | while read -r tag; do
+            [ -n "$tag" ] && docker push "$tag"
           done
 
       # ── ⑥ Push されたイメージの情報をサマリーに出力 ───────────────────────────
