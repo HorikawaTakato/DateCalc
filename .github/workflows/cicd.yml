@@ -15,6 +15,10 @@ jobs:
   # ── テストジョブ ────────────────────────────────────────────────────────────
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: none
+      id-token: none
 
     steps:
       # ── ① コードのチェックアウト ──────────────────────────────────────────
@@ -50,6 +54,8 @@ jobs:
     needs: test  # test ジョブが成功した場合のみ実行
     permissions:
       contents: read
+      packages: none
+      id-token: none
 
     outputs:
       # push ジョブへタグを引き渡す
@@ -146,6 +152,7 @@ jobs:
     permissions:
       contents: read
       packages: write  # GHCR へのイメージ Push
+      id-token: none
 
     steps:
       # ── ① GITHUB_TOKEN で GHCR に自動ログイン ──────────────────────────────
@@ -207,8 +214,9 @@ jobs:
     if: github.event_name != 'pull_request'  # PR 時はデプロイしない
 
     permissions:
-      id-token: write  # OIDC 認証に必要
       contents: read
+      packages: none
+      id-token: write  # OIDC 認証に必要
 
     steps:
       # ── ① コードのチェックアウト ────────────────────────────────────────────
