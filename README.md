@@ -58,25 +58,31 @@ mainへのpushをトリガーに、以下の処理が順番に自動で実行さ
 
 | No. | ジョブ | ステップ | 処理内容 |
 |-----|--------|-----------|---------|
-| 1  | test           | Checkout repository                  | リポジトリをチェックアウト |
-| 2  | test           | Set up Python                        | Python3.14環境をセットアップ |
-| 3  | test           | Install dependencies                 | pipで依存パッケージをインストール |
-| 4  | test           | Run tests                            | pytestでユニットテストを実行 |
-| 5  | build-and-push | Checkout repository                  | リポジトリをチェックアウト |
-| 6  | build-and-push | Login to GHCR                        | GITHUB_TOKENでGHCRに認証ログイン |
-| 7  | build-and-push | Extract metadata (tags & labels)     | Webアプリイメージのタグ・ラベルを生成 |
-| 8  | build-and-push | Set up Docker Buildx                 | BuildKitを有効化 |
-| 9  | build-and-push | Build and push image                 | WebアプリイメージをビルドしGHCRにプッシュ |
-| 10 | build-and-push | Extract metadata for nginx image     | Nginxイメージのタグ・ラベルを生成 |
-| 11 | build-and-push | Build and push nginx image           | NginxイメージをビルドしGHCRにプッシュ |
-| 12 | build-and-push | Output image digest                  | プッシュしたイメージ情報をサマリーに出力 |
-| 13 | deploy         | Checkout repository                  | リポジトリをチェックアウト |
-| 14 | deploy         | Configure AWS credentials            | OIDCでAWSに認証 |
-| 15 | deploy         | Stop running tasks                   | 稼働中の旧ECSタスクを停止しポートを解放 |
-| 16 | deploy         | Get short SHA                        | コミットSHAの先頭7文字を生成 |
-| 17 | deploy         | Render ECS task definition for web   | タスク定義のwebコンテナイメージを更新 |
-| 18 | deploy         | Render ECS task definition for nginx | タスク定義のnginxコンテナイメージを更新 |
-| 19 | deploy         | Deploy to ECS                        | ECSサービスにデプロイし安定化まで待機 |
+| 1  | test   | Checkout repository                  | リポジトリをチェックアウト |
+| 2  | test   | Set up Python                        | Python3.14環境をセットアップ |
+| 3  | test   | Install dependencies                 | pipで依存パッケージをインストール |
+| 4  | test   | Run tests                            | pytestでユニットテストを実行 |
+| 5  | build  | Checkout repository                  | リポジトリをチェックアウト |
+| 6  | build  | Extract metadata for web image       | Webコンテナイメージのタグ・ラベルを生成 |
+| 7  | build  | Extract metadata for nginx image     | Nginxコンテナイメージのタグ・ラベルを生成 |
+| 8  | build  | Set up Docker Buildx                 | BuildKitを有効化 |
+| 9  | build  | Build web image                      | Webコンテナイメージをビルド |
+| 10 | build  | Build nginx image                    | Nginxコンテナイメージをビルド |
+| 11 | build  | Upload web image artifact            | WebコンテナイメージをArtifactにアップロード |
+| 12 | build  | Upload nginx image artifact          | NginxコンテナイメージをArtifactにアップロード |
+| 13 | push   | Login to GHCR                        | GITHUB_TOKENでGHCRにログイン |
+| 14 | push   | Download web image artifact          | WebコンテナイメージをArtifactからダウンロード |
+| 15 | push   | Push web image                       | WebコンテナイメージをGHCRにプッシュ |
+| 16 | push   | Download nginx image artifact        | NginxコンテナイメージをArtifactからダウンロード |
+| 17 | push   | Push nginx image                     | NginxコンテナイメージをGHCRにプッシュ |
+| 18 | push   | Output image digest                  | プッシュしたイメージ情報をサマリーに出力 |
+| 19 | deploy | Checkout repository                  | リポジトリをチェックアウト |
+| 20 | deploy | Configure AWS credentials            | OIDCでAWS認証情報を取得 |
+| 21 | deploy | Stop running tasks                   | 稼働中の旧ECSタスクを停止しポートを解放 |
+| 22 | deploy | Get short SHA                        | コミットSHAの先頭7文字を生成 |
+| 23 | deploy | Render ECS task definition for web   | タスク定義のWebコンテナイメージを更新 |
+| 24 | deploy | Render ECS task definition for nginx | タスク定義のNginxコンテナイメージを更新 |
+| 25 | deploy | Deploy to ECS                        | ECSサービスにデプロイし安定化まで待機 |
 
 ---
 
