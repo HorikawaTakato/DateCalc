@@ -104,9 +104,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=docker,dest=/tmp/web.tar  # ローカル tar に保存
-          # GHCR をキャッシュストアに利用してビルドを高速化
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache,mode=max
           # Dockerfile の ARG にビルド日時とコミットSHA を渡す
           build-args: |
             BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
@@ -122,8 +119,6 @@ jobs:
           push: false               # このジョブでは Push しない
           tags: ${{ steps.meta-nginx.outputs.tags }}
           outputs: type=docker,dest=/tmp/nginx.tar  # ローカル tar に保存
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:cache
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NGINX_IMAGE_NAME }}:cache,mode=max
 
       # ── ⑦ ビルド済み tar を artifact としてアップロード ─────────────────────
       #      push ジョブへ引き渡す（PR 時はアップロードのみで push ジョブはスキップ）
