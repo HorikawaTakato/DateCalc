@@ -90,9 +90,12 @@ mainへのpushとpull requestをトリガーに実行
 | 22 | deploy | Render ECS task definition for web   | タスク定義のWebイメージをdigestで更新 |
 | 23 | deploy | Render ECS task definition for nginx | タスク定義のNginxイメージをdigestで更新 |
 | 24 | deploy | Deploy to ECS                        | ECSサービスにデプロイし安定化まで待機 |
-　  
-　  
-　  
+
+<br>
+<br>
+<br>
+<br>
+<br>
 
 ---
 
