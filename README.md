@@ -52,7 +52,12 @@ datecalc/
 
 ## GitHub Actions（CI/CD）
 
-mainへのpushをトリガーに、以下の処理が順番に自動で実行されます。
+`main` への push と、`main` 向けの pull request をトリガーに実行されます。
+
+- **pull request 時**：`test` → `build` のみ実行し、コンテナのビルド検証まで行います（GHCR への push とデプロイはスキップ）。
+- **`main` への push 時**：`test` → `build` → `push` → `deploy` をすべて実行します。
+
+同一ブランチ／PR で新しい実行が始まると、PR・フィーチャーブランチでは実行中のワークフローをキャンセルして最新のみ継続します（`main` はデプロイの中断を避けるためキャンセルしません）。各ジョブには `timeout-minutes` を設定しています。
 
 ---
 
@@ -63,27 +68,27 @@ mainへのpushをトリガーに、以下の処理が順番に自動で実行さ
 | 3  | test   | Install dependencies                 | pipで依存パッケージをインストール |
 | 4  | test   | Run tests                            | pytestでユニットテストを実行 |
 | 5  | build  | Checkout repository                  | リポジトリをチェックアウト |
-| 6  | build  | Extract metadata for web image       | Webコンテナイメージのタグ・ラベルを生成 |
-| 7  | build  | Extract metadata for nginx image     | Nginxコンテナイメージのタグ・ラベルを生成 |
+| 6  | build  | Extract metadata for web image       | Webイメージのタグ・ラベルを生成 |
+| 7  | build  | Extract metadata for nginx image     | Nginxイメージのタグ・ラベルを生成 |
 | 8  | build  | Set up Docker Buildx                 | BuildKitを有効化 |
-| 9  | build  | Build web image                      | Webコンテナイメージをビルド |
-| 10 | build  | Build nginx image                    | Nginxコンテナイメージをビルド |
-| 11 | build  | Upload web image artifact            | WebコンテナイメージをArtifactにアップロード |
-| 12 | build  | Upload nginx image artifact          | NginxコンテナイメージをArtifactにアップロード |
+| 9  | build  | Build web image                      | Webイメージをビルド（tar出力） |
+| 10 | build  | Build nginx image                    | Nginxイメージをビルド（tar出力） |
+| 11 | build  | Upload web image artifact            | WebイメージをArtifactに保存（PR時スキップ） |
+| 12 | build  | Upload nginx image artifact          | NginxイメージをArtifactに保存（PR時スキップ） |
 | 13 | push   | Login to GHCR                        | GITHUB_TOKENでGHCRにログイン |
-| 14 | push   | Download web image artifact          | WebコンテナイメージをArtifactからダウンロード |
-| 15 | push   | Push web image                       | WebコンテナイメージをGHCRにプッシュ |
-| 16 | push   | Download nginx image artifact        | NginxコンテナイメージをArtifactからダウンロード |
-| 17 | push   | Push nginx image                     | NginxコンテナイメージをGHCRにプッシュ |
-| 18 | push   | Output image digest                  | プッシュしたイメージ情報をサマリーに出力 |
+| 14 | push   | Download web image artifact          | WebイメージをArtifactから取得 |
+| 15 | push   | Push web image                       | WebイメージをGHCRにプッシュしdigest取得 |
+| 16 | push   | Download nginx image artifact        | NginxイメージをArtifactから取得 |
+| 17 | push   | Push nginx image                     | NginxイメージをGHCRにプッシュしdigest取得 |
+| 18 | push   | Output image digest                  | タグ・digestをサマリーに出力 |
 | 19 | deploy | Checkout repository                  | リポジトリをチェックアウト |
 | 20 | deploy | Configure AWS credentials            | OIDCでAWS認証情報を取得 |
-| 21 | deploy | Inject executionRoleArn              | タスク定義の実行ロールARNプレースホルダーを置換 |
-| 22 | deploy | Stop running tasks                   | 稼働中の旧ECSタスクを停止しポートを解放 |
-| 23 | deploy | Get short SHA                        | コミットSHAの先頭7文字を生成 |
-| 24 | deploy | Render ECS task definition for web   | タスク定義のWebコンテナイメージを更新 |
-| 25 | deploy | Render ECS task definition for nginx | タスク定義のNginxコンテナイメージを更新 |
-| 26 | deploy | Deploy to ECS                        | ECSサービスにデプロイし安定化まで待機 |
+| 21 | deploy | Inject executionRoleArn              | 実行ロールARNのプレースホルダーを置換 |
+| 22 | deploy | Render ECS task definition for web   | タスク定義のWebイメージをdigestで更新 |
+| 23 | deploy | Render ECS task definition for nginx | タスク定義のNginxイメージをdigestで更新 |
+| 24 | deploy | Deploy to ECS                        | ECSサービスにデプロイし安定化まで待機 |
+
+
 
 ---
 
