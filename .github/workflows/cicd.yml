@@ -114,7 +114,8 @@ jobs:
             type=ref,event=branch
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
-      # ── ④ BuildKit 有効化（キャッシュ最適化）────────────────────────────────
+      # ── ④ Docker Buildx をセットアップ ──────────────────────────────────────
+      #      build-push-action の outputs: type=docker（ローカル tar 出力）に必要
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -124,7 +125,7 @@ jobs:
       - name: Build web image
         uses: docker/build-push-action@v7
         with:
-          context: ./app          # ビルドコンテキストを app/ に変更
+          context: ./app          # ビルドコンテキストは app/
           file: ./app/Dockerfile  # Dockerfile のパスを明示
           push: false             # このジョブでは Push しない
           tags: ${{ steps.meta.outputs.tags }}
@@ -140,7 +141,7 @@ jobs:
       - name: Build nginx image
         uses: docker/build-push-action@v7
         with:
-          context: ./nginx          # ビルドコンテキストを nginx/ に変更
+          context: ./nginx          # ビルドコンテキストは nginx/
           file: ./nginx/Dockerfile  # Nginx 用 Dockerfile
           push: false               # このジョブでは Push しない
           tags: ${{ steps.meta-nginx.outputs.tags }}
@@ -148,7 +149,6 @@ jobs:
           outputs: type=docker,dest=/tmp/nginx.tar  # ローカル tar に保存
 
       # ── ⑦ ビルド済み tar を artifact としてアップロード ─────────────────────
-      #      push ジョブへ引き渡す（PR 時はアップロードのみで push ジョブはスキップ）
       #      PR 時は push ジョブがスキップされ成果物が消費されないため、
       #      アップロード自体を行わない（ストレージの無駄を避ける）。
       - name: Upload web image artifact
@@ -352,7 +352,7 @@ jobs:
       #        minimumHealthyPercent = 0 / maximumPercent = 100
       #      を設定し、「古いタスクを停止 → ポート解放 → 新タスク起動」の順で
       #      ECS スケジューラに処理させること（手動 stop-task は競合するため廃止）。
-      #      デプロイ完了まで待機する。
+      #      失敗時はサービスのデプロイサーキットブレーカーで自動ロールバックする。
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
