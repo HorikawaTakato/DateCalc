@@ -52,12 +52,15 @@ datecalc/
 
 ## GitHub Actions（CI/CD）
 
-`main` への push と、`main` 向けの pull request をトリガーに実行されます。
+mainへのpushとpull requestをトリガーに実行
 
-- **pull request 時**：`test` → `build` のみ実行し、コンテナのビルド検証まで行います（GHCR への push とデプロイはスキップ）。
-- **`main` への push 時**：`test` → `build` → `push` → `deploy` をすべて実行します。
+- **push**：test → build → push → deployすべて実行
+- **pull request**：test → buildのみ実行（pushとdeployはスキップ）
 
-同一ブランチ／PR で新しい実行が始まると、PR・フィーチャーブランチでは実行中のワークフローをキャンセルして最新のみ継続します（`main` はデプロイの中断を避けるためキャンセルしません）。各ジョブには `timeout-minutes` を設定しています。
+同時実行制御（concurrency）はジョブ単位で設定
+ 
+- **test / build / push**：古いコミットの実行をキャンセルし、最新コミットを優先
+- **deploy**：実行中はキャンセルせず、新しい実行は前のデプロイ完了まで待機
 
 ---
 
@@ -87,8 +90,8 @@ datecalc/
 | 22 | deploy | Render ECS task definition for web   | タスク定義のWebイメージをdigestで更新 |
 | 23 | deploy | Render ECS task definition for nginx | タスク定義のNginxイメージをdigestで更新 |
 | 24 | deploy | Deploy to ECS                        | ECSサービスにデプロイし安定化まで待機 |
-
-
+  
+  
 
 ---
 

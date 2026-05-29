@@ -6,14 +6,14 @@ on:
   pull_request:
     branches: [main]
 
-# ── 同時実行制御 ─────────────────────────────────────────────────────────────
-#    同一ブランチ／PRで新しい実行が始まった場合の挙動を制御する。
-#    PR・フィーチャーブランチは古い実行をキャンセルして最新のみ継続するが、
-#    main（＝デプロイを伴う）は途中キャンセルで中途半端な状態を避けるため
-#    キャンセルしない。
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+# ── 同時実行制御（ジョブ単位で制御）──────────────────────────────────────────
+#    ワークフロー全体に cancel-in-progress: true を付けると、実行中の deploy
+#    まで巻き込んでキャンセルされる（ECS 側のロールアウトは止まらず競合するため
+#    危険）。そのため concurrency は各ジョブに個別指定する:
+#      - test / build / push : 共通グループ(ci-*)で cancel-in-progress: true。
+#          追い越された古いコミットの実行を打ち切り、最新コミットを優先する。
+#      - deploy              : 専用グループ(deploy-*)で cancel-in-progress: false。
+#          実行中はキャンセルせず、新しい実行は前のデプロイ完了まで待機（直列化）。
 
 env:
   REGISTRY: ghcr.io
@@ -25,6 +25,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # CI 段階の共通グループ。追い越された実行はキャンセルして最新を優先
+    concurrency:
+      group: ci-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     permissions:
       contents: read
       packages: none
@@ -63,6 +67,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: test  # test ジョブが成功した場合のみ実行
+    # test と同一の CI グループ。追い越された実行はキャンセル
+    concurrency:
+      group: ci-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     permissions:
       contents: read
       packages: none
@@ -167,6 +175,11 @@ jobs:
     timeout-minutes: 20
     needs: build  # build ジョブが成功した場合のみ実行
     if: github.event_name != 'pull_request'  # PR 時はスキップ
+    # test/build と同一の CI グループ。追い越された実行はキャンセル
+    #（新しい実行が全タグを push し直すため、途中キャンセルでも最終的に整合する）
+    concurrency:
+      group: ci-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     permissions:
       contents: read
       packages: write  # GHCR へのイメージ Push
@@ -274,6 +287,10 @@ jobs:
     timeout-minutes: 30
     needs: push  # push ジョブが成功した場合のみ実行
     if: github.event_name != 'pull_request'  # PR 時はデプロイしない
+    # デプロイ専用グループ。実行中はキャンセルせず、後続の実行は完了まで待機（直列化）
+    concurrency:
+      group: deploy-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: false
 
     permissions:
       contents: read
