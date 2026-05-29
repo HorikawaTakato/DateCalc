@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+# ── 同時実行制御 ─────────────────────────────────────────────────────────────
+#    同一ブランチ／PRで新しい実行が始まった場合、実行中のワークフローをキャンセルし
+#    最新の実行のみを継続させる
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: horikawatakato/datecalc
@@ -133,7 +140,7 @@ jobs:
         with:
           name: web-image
           path: /tmp/web.tar
-          retention-days: 1  # push 後は不要なので 1 日で自動削除
+          retention-days: 1  # 同一ワークフローの push ジョブで消費されるため 1 日で十分
 
       - name: Upload nginx image artifact
         uses: actions/upload-artifact@v6
@@ -172,10 +179,12 @@ jobs:
 
       # ── ③ Web イメージを Docker にロードして GHCR へ Push ────────────────────
       - name: Push web image
+        env:
+          WEB_TAGS: ${{ needs.build.outputs.web_tags }}
         run: |
           docker load --input /tmp/web.tar
           # build ジョブで付与したタグをすべて Push する
-          echo '${{ needs.build.outputs.web_tags }}' | while read -r tag; do
+          echo "$WEB_TAGS" | while read -r tag; do
             [ -n "$tag" ] && docker push "$tag"
           done
 
@@ -188,24 +197,32 @@ jobs:
 
       # ── ⑤ Nginx イメージを Docker にロードして GHCR へ Push ──────────────────
       - name: Push nginx image
+        env:
+          NGINX_TAGS: ${{ needs.build.outputs.nginx_tags }}
         run: |
           docker load --input /tmp/nginx.tar
-          echo '${{ needs.build.outputs.nginx_tags }}' | while read -r tag; do
+          echo "$NGINX_TAGS" | while read -r tag; do
             [ -n "$tag" ] && docker push "$tag"
           done
 
       # ── ⑥ Push されたイメージの情報をサマリーに出力 ───────────────────────────
       - name: Output image digest
+        env:
+          REGISTRY: ${{ env.REGISTRY }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          NGINX_IMAGE_NAME: ${{ env.NGINX_IMAGE_NAME }}
+          WEB_TAGS: ${{ needs.build.outputs.web_tags }}
+          NGINX_TAGS: ${{ needs.build.outputs.nginx_tags }}
         run: |
           echo "## ✅ Images pushed to GHCR" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Registry | \`${{ env.REGISTRY }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Web Image | \`${{ env.IMAGE_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Web Tags | \`${{ needs.build.outputs.web_tags }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Nginx Image | \`${{ env.NGINX_IMAGE_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Nginx Tags | \`${{ needs.build.outputs.nginx_tags }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Registry | \`${REGISTRY}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Web Image | \`${IMAGE_NAME}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Web Tags | \`${WEB_TAGS}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Nginx Image | \`${NGINX_IMAGE_NAME}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Nginx Tags | \`${NGINX_TAGS}\` |" >> $GITHUB_STEP_SUMMARY
 
   # ── ECS デプロイジョブ ────────────────────────────────────────────────────
   deploy:
@@ -228,27 +245,42 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          # AWS_REGION は非機密情報のため Variables（vars.*）で管理する
+          aws-region: ${{ vars.AWS_REGION }}
 
-      # ── ③ 実行中の古いタスクを停止してポートを解放 ──────────────────────────
+      # ── ③ タスク定義のプレースホルダーを Variables の値で置換 ──────────────
+      #      task-definition.json の __EXECUTION_ROLE_ARN__ を実際の ARN に差し替える
+      #      AWSアカウントIDを含む ARN をリポジトリにハードコードしないための措置
+      - name: Inject executionRoleArn
+        env:
+          EXECUTION_ROLE_ARN: ${{ vars.ECS_EXECUTION_ROLE_ARN }}
+        run: |
+          sed -i "s|__EXECUTION_ROLE_ARN__|${EXECUTION_ROLE_ARN}|g" \
+            task-definition.json
+
+      # ── ④ 実行中の古いタスクを停止してポートを解放 ──────────────────────────
       #      EC2起動タイプではポート80が占有されると新タスクが起動できないため
       #      デプロイ前に古いタスクを停止する
       - name: Stop running tasks
+        env:
+          ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+          ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
         run: |
           TASK_ARNS=$(aws ecs list-tasks \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service-name ${{ secrets.ECS_SERVICE }} \
+            --cluster "$ECS_CLUSTER" \
+            --service-name "$ECS_SERVICE" \
             --desired-status RUNNING \
-            --region ${{ secrets.AWS_REGION }} \
+            --region "$AWS_REGION" \
             --query 'taskArns' \
             --output text)
           if [ -n "$TASK_ARNS" ]; then
             for TASK_ARN in $TASK_ARNS; do
               echo "Stopping task: $TASK_ARN"
               aws ecs stop-task \
-                --cluster ${{ secrets.ECS_CLUSTER }} \
-                --task $TASK_ARN \
-                --region ${{ secrets.AWS_REGION }}
+                --cluster "$ECS_CLUSTER" \
+                --task "$TASK_ARN" \
+                --region "$AWS_REGION"
             done
             echo "Waiting for tasks to stop..."
             sleep 15
@@ -257,7 +289,9 @@ jobs:
       # ── ④ 短縮 SHA を生成 ────────────────────────────────────────────────
       - name: Get short SHA
         id: short-sha
-        run: echo "sha=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+        env:
+          FULL_SHA: ${{ github.sha }}
+        run: echo "sha=$(echo "$FULL_SHA" | cut -c1-7)" >> $GITHUB_OUTPUT
 
       # ── ⑤ タスク定義の web コンテナイメージを最新の SHA タグで更新 ──────────
       - name: Render ECS task definition for web
@@ -283,6 +317,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.task-def-nginx.outputs.task-definition }}
-          service: ${{ secrets.ECS_SERVICE }}
-          cluster: ${{ secrets.ECS_CLUSTER }}
+          service: ${{ vars.ECS_SERVICE }}
+          cluster: ${{ vars.ECS_CLUSTER }}
           wait-for-service-stability: true

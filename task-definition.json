@@ -1,6 +1,6 @@
 {
   "family": "datecalc-task",
-  "executionRoleArn": "arn:aws:iam::291066412387:role/ecsTaskExecutionRole",
+  "executionRoleArn": "__EXECUTION_ROLE_ARN__",
   "networkMode": "bridge",
   "containerDefinitions": [
     {

@@ -23,23 +23,23 @@ datecalc/
 │   └── workflows/
 │       └── cicd.yml            # GitHub Actions
 ├── app/
-│   ├── DateCalc.html           # Web フロントエンド
+│   ├── DateCalc.html           # Webフロントエンド
 │   ├── DateCalc.py             # 計算ロジック
-│   ├── DateCalc_server.py      # Flask Web サーバー（API）
-│   ├── Dockerfile
-│   ├── gunicorn.conf.py        # Gunicorn 設定
+│   ├── DateCalc_server.py      # Flask Webサーバー（API）
+│   ├── Dockerfile              # Webコンテナイメージ用
+│   ├── gunicorn.conf.py        # Gunicorn設定
 │   ├── requirements.txt        # 依存パッケージ（Flask・Gunicorn）
 │   ├── test_DateCalc.py        # ユニットテスト（pytest）
-│   └── wsgi.py                 # Gunicorn エントリポイント
+│   └── wsgi.py                 # Gunicornエントリポイント
 ├── nginx/
-│   ├── Dockerfile              # カスタム Nginx イメージ用
+│   ├── Dockerfile              # Nginxコンテナイメージ用
 │   └── nginx.conf              # リバースプロキシ設定
-├── .gitignore                  # Git 管理除外設定
+├── .gitignore                  # Git管理除外設定
 ├── LICENSE                     # MITライセンス
 ├── README.md                   # プロジェクト説明
 ├── container-architecture.svg  # コンテナ構成図
 ├── docker-compose.yml          # コンテナ構成定義（ローカル開発用）
-└── task-definition.json        # AWS ECS タスク定義
+└── task-definition.json        # AWS ECSタスク定義
 ```
 
 ---
@@ -78,11 +78,12 @@ mainへのpushをトリガーに、以下の処理が順番に自動で実行さ
 | 18 | push   | Output image digest                  | プッシュしたイメージ情報をサマリーに出力 |
 | 19 | deploy | Checkout repository                  | リポジトリをチェックアウト |
 | 20 | deploy | Configure AWS credentials            | OIDCでAWS認証情報を取得 |
-| 21 | deploy | Stop running tasks                   | 稼働中の旧ECSタスクを停止しポートを解放 |
-| 22 | deploy | Get short SHA                        | コミットSHAの先頭7文字を生成 |
-| 23 | deploy | Render ECS task definition for web   | タスク定義のWebコンテナイメージを更新 |
-| 24 | deploy | Render ECS task definition for nginx | タスク定義のNginxコンテナイメージを更新 |
-| 25 | deploy | Deploy to ECS                        | ECSサービスにデプロイし安定化まで待機 |
+| 21 | deploy | Inject executionRoleArn              | タスク定義の実行ロールARNプレースホルダーを置換 |
+| 22 | deploy | Stop running tasks                   | 稼働中の旧ECSタスクを停止しポートを解放 |
+| 23 | deploy | Get short SHA                        | コミットSHAの先頭7文字を生成 |
+| 24 | deploy | Render ECS task definition for web   | タスク定義のWebコンテナイメージを更新 |
+| 25 | deploy | Render ECS task definition for nginx | タスク定義のNginxコンテナイメージを更新 |
+| 26 | deploy | Deploy to ECS                        | ECSサービスにデプロイし安定化まで待機 |
 
 ---
 
