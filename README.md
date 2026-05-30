@@ -37,6 +37,7 @@ datecalc/
 ├── .gitignore                  # Git管理除外設定
 ├── LICENSE                     # MITライセンス
 ├── README.md                   # プロジェクト説明
+├── cicd-workflow.svg           # CI/CDワークフロー図
 ├── container-architecture.svg  # コンテナ構成図
 ├── docker-compose.yml          # コンテナ構成定義（ローカル開発用）
 └── task-definition.json        # AWS ECSタスク定義
@@ -62,9 +63,13 @@ mainへのpushとpull requestをトリガーに実行
 - **test / build / push**：古いコミットの実行をキャンセルし、最新コミットを優先
 - **deploy**：実行中はキャンセルせず、新しい実行は前のデプロイ完了まで待機
 
----
-
 <img src="cicd-workflow.svg" alt="CI/CDワークフロー図" width="100%">
+
+<br>
+<br>
+<br>
+<br>
+<br>
 
 ---
 
